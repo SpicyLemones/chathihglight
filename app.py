@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
@@ -42,4 +43,6 @@ def get_highlight():
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    # Use PORT environment variable or default to 5000
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
