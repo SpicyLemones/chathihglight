@@ -1,0 +1,4 @@
+Flask
+twitchio
+gunicorn
+requests
