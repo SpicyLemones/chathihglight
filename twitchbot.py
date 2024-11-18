@@ -146,7 +146,7 @@ class TwitchBot(commands.Bot):
 
         # Send the chat message to the server
         try:
-            response = requests.post("http://localhost:5000/api/chat", json=chat_data)
+            response = requests.post("https://chathihglight-2.onrender.com/api/chat", json=chat_data)
             if response.status_code == 200:
                 print(f"Message sent: {chat_data}")
             else:
