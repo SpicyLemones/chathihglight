@@ -83,7 +83,7 @@ def fetch_badge_urls(badges_string, broadcaster_id):
 
 class TwitchBot(commands.Bot):
     def __init__(self):
-        super().__init__(token=OAUTH_TOKEN, prefix="?", initial_channels=["SpicyLemones"])
+        super().__init__(token=OAUTH_TOKEN, prefix="?", initial_channels=["TodBenford"])
         self.broadcaster_id = None
 
     async def event_ready(self):
