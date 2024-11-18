@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlighted Message</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgba(0, 0, 0, 0.8); /* Transparent black background */
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden; /* Hidden by default */
+            opacity: 0; /* Invisible initially */
+            transition: opacity 0.4s ease-in-out; /* Smooth visibility transition */
+        }
+        .highlight {
+            font-size: 5vw; /* Font size dynamically adjusts with viewport width */
+            font-weight: bold;
+            padding: 2vh; /* Padding adjusts with viewport height */
+            border: 5px solid #000000;
+            background-color: rgba(51, 51, 51, 0); /* Semi-transparent background */
+            border-radius: 15px; /* Rounded edges */
+            animation: none; /* No animation by default */
+            text-align: center;
+        }
+        @keyframes slideInOut {
+            0% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+            10% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            90% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+        .highlight.show {
+            animation: slideInOut 29.6s ease-in-out forwards; /* Slightly less than 30s to align with body fade-out */
+        }
+        .username {
+            color: #1e90ff;
+            display: inline-flex;
+            align-items: center;
+        }
+        .badge {
+            margin-right: 8px;
+            width: 5vh; /* Adjust dynamically with viewport height */
+            height: 5vh; /* Adjust dynamically with viewport height */
+        }
+    </style>
+</head>
+<body>
+    <div class="highlight" id="highlight"></div>
+
+    <audio id="slide-sound" src="/static/slide.mp3" preload="auto"></audio>
+
+    <script>
+        let lastHighlight = null; // Track the last highlighted message
+
+        async function fetchHighlightedMessage() {
+            const response = await fetch("/api/highlight");
+            const message = await response.json();
+
+            const body = document.body;
+            const highlightDiv = document.getElementById("highlight");
+            const slideSound = document.getElementById("slide-sound");
+
+            // If the message is new or different from the last displayed one
+            if (message && JSON.stringify(message) !== JSON.stringify(lastHighlight)) {
+                lastHighlight = message; // Update the last highlight
+
+                // Clear current content
+                highlightDiv.innerHTML = "";
+
+                // Add badges
+                const usernameSpan = document.createElement("span");
+                usernameSpan.classList.add("username");
+                if (message.badges && message.badges.length > 0) {
+                    message.badges.forEach((badgeUrl) => {
+                        const badgeImg = document.createElement("img");
+                        badgeImg.src = badgeUrl;
+                        badgeImg.alt = "Badge";
+                        badgeImg.classList.add("badge");
+                        usernameSpan.appendChild(badgeImg);
+                    });
+                }
+
+                // Add username
+                const usernameText = document.createElement("span");
+                usernameText.textContent = `${message.author}: `;
+                usernameText.style.color = message.color;
+                usernameSpan.appendChild(usernameText);
+
+                // Add content
+                const contentSpan = document.createElement("span");
+                contentSpan.textContent = message.content;
+
+                // Append all elements to the highlight div
+                highlightDiv.appendChild(usernameSpan);
+                highlightDiv.appendChild(contentSpan);
+
+                // Play sound
+
+
+                // Immediately make the body visible and fade it in
+                body.style.visibility = "visible";
+                requestAnimationFrame(() => {
+                    body.style.opacity = "1"; // Fade in
+                });
+
+                // Start the animation
+                highlightDiv.classList.add("show");
+
+                const slideSound = document.getElementById("slide-sound");
+                slideSound.play().then(() => {
+                    console.log("Audio played successfully.");
+                }).catch((error) => {
+                    console.error("Audio playback failed:", error);
+                });
+
+                // Schedule the fade-out and hiding of the body
+                setTimeout(() => {
+                    // Start fading out the body just before the animation ends
+                    body.style.opacity = "0";
+
+                    // Hide the body completely after the fade-out
+                    setTimeout(() => {
+                        body.style.visibility = "hidden"; // Fully hide the body
+                        highlightDiv.classList.remove("show"); // Reset animation state
+                    }, 400); // Match the fade-out transition duration
+                }, 29600); // Start fading out slightly before the animation ends
+            }
+        }
+
+        // Poll the server every 2 seconds for new highlighted messages
+        setInterval(fetchHighlightedMessage, 2000);
+    </script>
+</body>
+</html>
