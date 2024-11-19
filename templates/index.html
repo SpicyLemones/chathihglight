@@ -9,7 +9,16 @@
             font-family: Arial, sans-serif;
             background-color: #121212;
             color: white;
+            margin: 0;
+            padding: 0;
         }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin: 20px 0;
+        }
+
         .chat {
             width: 60%;
             margin: 0 auto;
@@ -17,123 +26,141 @@
             padding: 10px;
             overflow-y: auto;
             max-height: 500px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
         }
+
         .message {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #282828;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
 
-.message-content {
-    display: flex;
-    align-items: center; /* Ensures badges and text are vertically aligned */
-    flex-grow: 1; /* Allows this section to grow and occupy available space */
-}
+        .message-content {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
 
-.highlight-button {
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-}
+        .highlight-button {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
 
-.highlight-button:hover {
-    background-color: #1c86ee;
-}
+        .highlight-button:hover {
+            background-color: #1c86ee;
+        }
 
-.badge {
-    margin-right: 4px;
-    width: 16px;
-    height: 16px;
-}
+        .badge {
+            margin-right: 6px;
+            width: 18px;
+            height: 18px;
+        }
 
-.username {
-    font-weight: bold;
-}
+        .username {
+            font-weight: bold;
+            color: #7fffd4;
+            margin-right: 5px;
+        }
+
+        .message-text {
+            color: white;
+            font-size: 14px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Twitch Chat</h1>
+    <h1>Twitch Chat</h1>
     <div class="chat" id="chat"></div>
 
     <script>
         async function fetchChat() {
-    const response = await fetch("/api/chat");
-    const chat = await response.json();
+            const response = await fetch("/api/chat");
+            const chat = await response.json();
 
-    const chatContainer = document.getElementById("chat");
-    chatContainer.innerHTML = ""; // Clear previous messages
+            const chatContainer = document.getElementById("chat");
+            chatContainer.innerHTML = ""; // Clear previous messages
 
-    chat.forEach((msg) => {
-        const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message");
+            chat.forEach((msg) => {
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message");
 
-        // Content container for badges and message text
-        const messageContentDiv = document.createElement("div");
-        messageContentDiv.classList.add("message-content");
+                // Content container for badges and message text
+                const messageContentDiv = document.createElement("div");
+                messageContentDiv.classList.add("message-content");
 
-        // Create username span with badges
-        const usernameSpan = document.createElement("span");
-        usernameSpan.classList.add("username");
+                // Create username span with badges
+                const usernameSpan = document.createElement("span");
+                usernameSpan.classList.add("username");
 
-        // Add badges to the username
-        if (msg.badges && msg.badges.length > 0) {
-            msg.badges.forEach((badgeUrl) => {
-                const badgeImg = document.createElement("img");
-                badgeImg.src = badgeUrl;
-                badgeImg.alt = "Badge";
-                badgeImg.classList.add("badge");
-                usernameSpan.appendChild(badgeImg);
+                // Add badges to the username
+                if (msg.badges && msg.badges.length > 0) {
+                    msg.badges.forEach((badgeUrl) => {
+                        const badgeImg = document.createElement("img");
+                        badgeImg.src = badgeUrl;
+                        badgeImg.alt = "Badge";
+                        badgeImg.classList.add("badge");
+                        usernameSpan.appendChild(badgeImg);
+                    });
+                }
+
+                // Add username text
+                const usernameText = document.createElement("span");
+                usernameText.textContent = `${msg.author}`;
+                usernameSpan.appendChild(usernameText);
+
+                // Add message content
+                const messageContent = document.createElement("span");
+                messageContent.textContent = `: ${msg.content}`;
+                messageContent.classList.add("message-text");
+
+                // Append username and content to the message content container
+                messageContentDiv.appendChild(usernameSpan);
+                messageContentDiv.appendChild(messageContent);
+
+                // Highlight button
+                const highlightButton = document.createElement("button");
+                highlightButton.textContent = "Highlight";
+                highlightButton.classList.add("highlight-button");
+                highlightButton.onclick = () => highlightMessage(msg);
+
+                // Append all elements to the main message div
+                messageDiv.appendChild(messageContentDiv);
+                messageDiv.appendChild(highlightButton);
+
+                chatContainer.appendChild(messageDiv);
             });
         }
 
-        // Add username text
-        const usernameText = document.createElement("span");
-        usernameText.textContent = `${msg.author}: `;
-        usernameSpan.appendChild(usernameText);
+        async function highlightMessage(message) {
+            const response = await fetch("/api/highlight", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(message),
+            });
 
-        // Add message content
-        const messageContent = document.createElement("span");
-        messageContent.textContent = msg.content;
+            if (response.ok) {
+                alert("Message highlighted!");
+            } else {
+                alert("Failed to highlight message.");
+            }
+        }
 
-        // Append username and content to the message content container
-        messageContentDiv.appendChild(usernameSpan);
-        messageContentDiv.appendChild(messageContent);
-
-        // Highlight button
-        const highlightButton = document.createElement("button");
-        highlightButton.textContent = "Highlight";
-        highlightButton.classList.add("highlight-button");
-        highlightButton.onclick = () => highlightMessage(msg);
-
-        // Append all elements to the main message div
-        messageDiv.appendChild(messageContentDiv);
-        messageDiv.appendChild(highlightButton);
-
-        chatContainer.appendChild(messageDiv);
-    });
-}
-
-async function highlightMessage(message) {
-    const response = await fetch("/api/highlight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(message),
-    });
-
-    if (response.ok) {
-        alert("Message highlighted!");
-    } else {
-        alert("Failed to highlight message.");
-    }
-}
-
-// Poll the server every 2 seconds for new messages
-setInterval(fetchChat, 2000);
-fetchChat(); // Initial fetch
-
+        // Poll the server every 2 seconds for new messages
+        setInterval(fetchChat, 1000);
+        fetchChat(); // Initial fetch
     </script>
 </body>
 </html>
