@@ -6,157 +6,199 @@
     <title>Twitch Chat</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: white;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: white;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
 
-        h1 {
-            text-align: center;
-            color: #ffffff;
-            margin: 20px 0;
-        }
+h1 {
+    text-align: center;
+    color: #ffffff;
+    margin: 20px 0;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
 
-        .chat {
-            width: 100%;
-            height: calc(100vh - 40px); /* Full height minus title */
-            margin: 0;
-            border: none;
-            padding: 10px;
-            overflow-y: auto;
-            background-color: #1e1e1e;
-            border-radius: 0;
-        }
+#chat-container {
+    max-width: 90vw;
+    margin: 20px auto;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background-color: #1f1f23;
+    height: 80vh;
+    overflow-y: auto; /* Enable vertical scrolling */
+    box-sizing: border-box;
+    scroll-behavior: smooth; /* Smooth scrolling effect */
+}
 
-        .message {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #282828;
-            border-radius: 8px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
+.message {
+    display: flex;
+    justify-content: space-between; /* Ensures space between text and button */
+    align-items: flex-start; /* Align items at the top */
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background-color: #282828;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    gap: 10px; /* Space between elements */
+}
 
-        .message-content {
-            display: flex;
-            align-items: center;
-            flex-grow: 1;
-        }
+.message:hover {
+    background-color: #333;
+}
 
-        .highlight-button {
-            background-color: #1e90ff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
+.message-content {
+    display: flex;
+    flex-direction: row; /* Ensure name and message are on the same row */
+    align-items: center; /* Vertically center name and text */
+    flex-grow: 1; /* Allow this section to take up available space */
+    max-width: calc(100% - 120px); /* Prevent text from overlapping the button */
+    gap: 5px; /* Add spacing between username and message */
+    flex-wrap: wrap; /* Allow wrapping if the content overflows */
+    margin-right: 10px; /* Add spacing before the button */
+}
 
-        .highlight-button:hover {
-            background-color: #1c86ee;
-        }
 
-        .badge {
-            margin-right: 6px;
-            width: 18px;
-            height: 18px;
-        }
+.badge {
+    margin-right: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    object-fit: cover; /* Ensure badges maintain aspect ratio */
+}
 
-        .username {
-            font-weight: bold;
-            color: #7fffd4;
-            margin-right: 5px;
-        }
+.username {
+    font-weight: bold;
+    color: #7fffd4;
+    margin-right: 8px;
+    font-size: 15px;
+}
 
-        .message-text {
-            color: white;
-            font-size: 14px;
-            word-wrap: break-word;
-            line-height: 1.5;
-        }
+.message-text {
+    color: white;
+    font-size: 14px;
+    word-wrap: break-word;
+    line-height: 1.5;
+    margin-left: 5px;
+    margin-right: 10px;
+    flex-grow: 1; /* Take up remaining space */
+    max-width: calc(100% - 100px); /* Ensure it doesn't overlap the button */
+}
+
+.highlight-button {
+    background-color: #1e90ff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    flex-shrink: 0; /* Prevent button from shrinking */
+    align-self: center; /* Keep button vertically aligned */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.highlight-button:hover {
+    background-color: #1c86ee;
+    transform: scale(1.05); /* Slight zoom on hover */
+}
+
+.highlighted {
+    background-color: #ffd700 !important; /* Gold background for highlighted messages */
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); /* Glow effect for highlight */
+}
+
+
     </style>
 </head>
 <body>
     <h1>Twitch Chat</h1>
-    <div class="chat" id="chat"></div>
+    <div id="chat-container"></div>
 
     <script>
-        let chatLoaded = false; // Flag to prevent multiple initializations
-    
-        async function fetchChat() {
-            const response = await fetch("/api/chat");
-            const chat = await response.json();
-    
-            const chatContainer = document.getElementById("chat");
-            chatContainer.innerHTML = ""; // Clear previous messages
-    
-            chat.forEach((msg) => {
-                const messageDiv = document.createElement("div");
-                messageDiv.classList.add("message");
-    
-                // Content container for badges and message text
-                const messageContentDiv = document.createElement("div");
-                messageContentDiv.classList.add("message-content");
-    
-                // Create username span with badges
-                const usernameSpan = document.createElement("span");
-                usernameSpan.classList.add("username");
-    
-                // Add badges to the username
-                if (msg.badges && msg.badges.length > 0) {
-                    msg.badges.forEach((badgeUrl) => {
-                        const badgeImg = document.createElement("img");
-                        badgeImg.src = badgeUrl;
-                        badgeImg.alt = "Badge";
-                        badgeImg.classList.add("badge");
-                        usernameSpan.appendChild(badgeImg);
-                    });
-                }
-    
-                // Add username text
-                const usernameText = document.createElement("span");
-                usernameText.textContent = `${msg.author}`;
-                usernameSpan.appendChild(usernameText);
-    
-                // Add message content
-                const messageContent = document.createElement("span");
-                messageContent.textContent = `: ${msg.content}`;
-                messageContent.classList.add("message-text");
-    
-                // Append username and content to the message content container
-                messageContentDiv.appendChild(usernameSpan);
-                messageContentDiv.appendChild(messageContent);
-    
-                // Highlight button
-                const highlightButton = document.createElement("button");
-                highlightButton.textContent = "Highlight";
-                highlightButton.classList.add("highlight-button");
-                highlightButton.onclick = () => highlightMessage(msg);
-    
-                // Append all elements to the main message div
-                messageDiv.appendChild(messageContentDiv);
-                messageDiv.appendChild(highlightButton);
-    
-                chatContainer.appendChild(messageDiv);
-            });
+        let lastMessageCount = 0; // Track the number of messages
 
-            // Auto-scroll to the bottom
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+        async function fetchChat() {
+            try {
+                const response = await fetch("chat.txt");
+                const data = await response.text();
     
-        async function highlightMessage(message) {
+                // Split lines and parse JSON
+                const messages = data.trim().split("\n").map(line => JSON.parse(line));
+    
+                const chatContainer = document.getElementById("chat-container");
+                const currentMessageCount = messages.length;
+
+                // Check if there are new messages
+                const hasNewMessages = currentMessageCount > lastMessageCount;
+
+                if (hasNewMessages) {
+                    chatContainer.innerHTML = ""; // Clear previous messages
+
+                    messages.forEach(msg => {
+                        const messageDiv = document.createElement("div");
+                        messageDiv.classList.add("message");
+        
+                        // Content container for badges and message text
+                        const messageContentDiv = document.createElement("div");
+                        messageContentDiv.classList.add("message-content");
+        
+                        // Add badges
+                        if (msg.badges && msg.badges.length > 0) {
+                            msg.badges.forEach(badgeUrl => {
+                                const badgeImg = document.createElement("img");
+                                badgeImg.src = badgeUrl;
+                                badgeImg.alt = "Badge";
+                                badgeImg.classList.add("badge");
+                                messageContentDiv.appendChild(badgeImg);
+                            });
+                        }
+        
+                        // Add username
+                        const usernameSpan = document.createElement("span");
+                        usernameSpan.classList.add("username");
+                        usernameSpan.textContent = msg.author;
+                        messageContentDiv.appendChild(usernameSpan);
+        
+                        // Add message content
+                        const messageContent = document.createElement("span");
+                        messageContent.classList.add("message-text");
+                        messageContent.textContent = msg.content;
+        
+                        messageContentDiv.appendChild(messageContent);
+                        messageDiv.appendChild(messageContentDiv);
+
+                        // Add highlight button
+                        const highlightButton = document.createElement("button");
+                        highlightButton.textContent = "Highlight";
+                        highlightButton.classList.add("highlight-button");
+                        highlightButton.onclick = () => toggleHighlight(msg);
+                        messageDiv.appendChild(highlightButton);
+        
+                        chatContainer.appendChild(messageDiv);
+                    });
+
+                    // Auto-scroll to the bottom only when new messages are added
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                    // Update the last message count
+                    lastMessageCount = currentMessageCount;
+                }
+            } catch (error) {
+                console.error("Error fetching chat:", error);
+            }
+        }
+
+        async function toggleHighlight(message) {
             const response = await fetch("/api/highlight", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(message),
             });
-    
             if (response.ok) {
                 alert("Message highlighted!");
             } else {
@@ -164,13 +206,8 @@
             }
         }
     
-        // Poll the server every 2 seconds for new messages (initialize once)
-        if (!chatLoaded) {
-            setInterval(fetchChat, 2000);
-            fetchChat(); // Initial fetch
-            chatLoaded = true; // Prevent reinitialization
-        }
+        // Poll the chat file every second
+        setInterval(fetchChat, 500);
     </script>
 </body>
 </html>
-

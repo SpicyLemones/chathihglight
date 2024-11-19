@@ -1,12 +1,14 @@
 import asyncio
 import requests
 import random
+import json
 from twitchio.ext import commands
 
 # Twitch API credentials
 CLIENT_ID = "gp762nuuoqcoxypju8c569th9wz7q5"
 OAUTH_TOKEN = "4wco6szkbonz9agwa0gvr1khuim08a"
 BASE_URL = "https://api.twitch.tv/helix"
+CHAT_FILE = "./templates/chat.txt"  # File to store chat messages
 
 
 def get_random_color():
@@ -35,12 +37,12 @@ def fetch_badge_urls(badges_string, broadcaster_id):
     # Fetch global badges
     global_badges_response = requests.get(f"{BASE_URL}/chat/badges/global", headers=headers).json()
     global_badges = global_badges_response.get("data", [])
-    print("Global Badges:", global_badges)  # Debug global badge data
 
     # Fetch channel-specific badges
-    channel_badges_response = requests.get(f"{BASE_URL}/chat/badges?broadcaster_id={broadcaster_id}", headers=headers).json() if broadcaster_id else {"data": []}
+    channel_badges_response = requests.get(
+        f"{BASE_URL}/chat/badges?broadcaster_id={broadcaster_id}", headers=headers
+    ).json() if broadcaster_id else {"data": []}
     channel_badges = channel_badges_response.get("data", [])
-    print("Channel Badges:", channel_badges)  # Debug channel badge data
 
     # Combine global and channel badges
     all_badges = global_badges + channel_badges
@@ -70,13 +72,8 @@ def fetch_badge_urls(badges_string, broadcaster_id):
                     if matching_version:
                         image_url = matching_version["image_url_1x"]
                         badge_urls.append(image_url)
-                        print(f"Badge Found: {badge_id}, Version: {version}, URL: {image_url}")
-                    else:
-                        print(f"Badge Version Not Found: {badge_id}, Version: {version}")
-                else:
-                    print(f"Badge ID Not Found: {badge_id}")
-            except ValueError as e:
-                print(f"Error processing badge: {badge}, Error: {e}")
+            except ValueError:
+                continue
 
     return badge_urls
 
@@ -139,20 +136,13 @@ class TwitchBot(commands.Bot):
             "author": message.author.name,
             "content": message.content,
             "badges": badges,
-            "color": color,  # Assign color dynamically
+            "color": color,
         }
 
-        print(chat_data)  # Print the message details for debugging
-
-        # Send the chat message to the server
-        try:
-            response = requests.post("https://chathihglight-2.onrender.com/api/chat", json=chat_data)
-            if response.status_code == 200:
-                print(f"Message sent: {chat_data}")
-            else:
-                print(f"Failed to send message: {response.status_code}")
-        except Exception as e:
-            print(f"Error sending message to server: {e}")
+        # Write chat message to a file
+        print(chat_data)
+        with open(CHAT_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(chat_data) + "\n")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
+
 
 app = Flask(__name__)
 
@@ -41,8 +42,13 @@ def set_highlight():
 def get_highlight():
     return jsonify(highlighted_message or {"author": "", "content": "No message highlighted yet."})
 
+# Route to serve chat.txt
+@app.route("/chat.txt")
+def serve_chat():
+    return send_from_directory("templates", "chat.txt")  # Serve chat.txt from `templates`
+
 
 if __name__ == "__main__":
     # Use PORT environment variable or default to 5000
-    port = int(os.getenv("PORT", 0000))
+    port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
