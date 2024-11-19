@@ -122,4 +122,55 @@
                 // Add username text
                 const usernameText = document.createElement("span");
                 usernameText.textContent = `${msg.author}`;
-        
+                usernameSpan.appendChild(usernameText);
+    
+                // Add message content
+                const messageContent = document.createElement("span");
+                messageContent.textContent = `: ${msg.content}`;
+                messageContent.classList.add("message-text");
+    
+                // Append username and content to the message content container
+                messageContentDiv.appendChild(usernameSpan);
+                messageContentDiv.appendChild(messageContent);
+    
+                // Highlight button
+                const highlightButton = document.createElement("button");
+                highlightButton.textContent = "Highlight";
+                highlightButton.classList.add("highlight-button");
+                highlightButton.onclick = () => highlightMessage(msg);
+    
+                // Append all elements to the main message div
+                messageDiv.appendChild(messageContentDiv);
+                messageDiv.appendChild(highlightButton);
+    
+                chatContainer.appendChild(messageDiv);
+            });
+
+            // Auto-scroll to the bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    
+        async function highlightMessage(message) {
+            const response = await fetch("/api/highlight", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(message),
+            });
+    
+            if (response.ok) {
+                alert("Message highlighted!");
+            } else {
+                alert("Failed to highlight message.");
+            }
+        }
+    
+        // Poll the server every 2 seconds for new messages (initialize once)
+        if (!chatLoaded) {
+            setInterval(fetchChat, 2000);
+            fetchChat(); // Initial fetch
+            chatLoaded = true; // Prevent reinitialization
+        }
+    </script>
+</body>
+</html>
+
