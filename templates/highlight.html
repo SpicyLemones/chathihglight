@@ -51,7 +51,7 @@
             }
         }
         .highlight.show {
-            animation: slideInOut 29.6s ease-in-out forwards; /* Slightly less than 30s to align with body fade-out */
+            animation: slideInOut 14.6s ease-in-out forwards; /* Slightly less than 15s to align with body fade-out */
         }
         .username {
             color: #1e90ff;
@@ -79,10 +79,13 @@
 
             const body = document.body;
             const highlightDiv = document.getElementById("highlight");
-            const slideSound = document.getElementById("slide-sound");
 
-            // If the message is new or different from the last displayed one
-            if (message && JSON.stringify(message) !== JSON.stringify(lastHighlight)) {
+            // If there is a valid new message with content
+            if (
+                message &&
+                message.content &&
+                JSON.stringify(message) !== JSON.stringify(lastHighlight)
+            ) {
                 lastHighlight = message; // Update the last highlight
 
                 // Clear current content
@@ -116,9 +119,13 @@
                 highlightDiv.appendChild(contentSpan);
 
                 // Play sound
+                const slideSound = document.getElementById("slide-sound");
+                slideSound.volume = 0.5;
+                slideSound.play().catch((error) =>
+                    console.error("Audio playback failed:", error)
+                );
 
-
-                // Immediately make the body visible and fade it in
+                // Make the body visible and fade it in
                 body.style.visibility = "visible";
                 requestAnimationFrame(() => {
                     body.style.opacity = "1"; // Fade in
@@ -126,14 +133,6 @@
 
                 // Start the animation
                 highlightDiv.classList.add("show");
-
-                const slideSound = document.getElementById("slide-sound");
-                slideSound.volume = 0.5;
-                slideSound.play().then(() => {
-                    console.log("Audio played successfully.");
-                }).catch((error) => {
-                    console.error("Audio playback failed:", error);
-                });
 
                 // Schedule the fade-out and hiding of the body
                 setTimeout(() => {
@@ -145,11 +144,11 @@
                         body.style.visibility = "hidden"; // Fully hide the body
                         highlightDiv.classList.remove("show"); // Reset animation state
                     }, 400); // Match the fade-out transition duration
-                }, 29600); // Start fading out slightly before the animation ends
+                }, 14600); // Start fading out slightly before the animation ends (15s total)
             }
         }
 
-        // Poll the server every 2 seconds for new highlighted messages
+        // Poll the server every 1 second for new highlighted messages
         setInterval(fetchHighlightedMessage, 1000);
     </script>
 </body>
