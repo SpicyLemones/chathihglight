@@ -15,7 +15,7 @@ def reset_highlight():
     Reset the highlighted message after a timeout.
     """
     global highlighted_message, highlight_reset_timer
-    time.sleep(20)  # Wait for 20 seconds
+    time.sleep(15)  # Wait for 15 seconds
     highlighted_message = None  # Reset the highlighted message
     highlight_reset_timer = None  # Clear the timer
 
