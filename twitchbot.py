@@ -140,11 +140,18 @@ class TwitchBot(commands.Bot):
         }
 
         # Write chat message to a file
-        print(chat_data)
-        with open(CHAT_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(chat_data) + "\n")
+        # Send the chat message to the server
+        try:
+            response = requests.post("https://chathihglight-2.onrender.com/api/chat", json=chat_data)
+            if response.status_code == 200:
+                print(f"Message sent: {chat_data}")
+            else:
+                print(f"Failed to send message: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending message to server: {e}")
 
 
 if __name__ == "__main__":
     bot = TwitchBot()
     asyncio.run(bot.run())
+
