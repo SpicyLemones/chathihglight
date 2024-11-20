@@ -6,113 +6,107 @@
     <title>Twitch Chat</title>
     <style>
         body {
-    font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: white;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
 
-h1 {
-    text-align: center;
-    color: #ffffff;
-    margin: 20px 0;
-    font-size: 24px;
-    letter-spacing: 1px;
-}
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin: 20px 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
 
-#chat-container {
-    max-width: 90vw;
-    margin: 20px auto;
-    padding: 10px;
-    border: 1px solid #333;
-    border-radius: 8px;
-    background-color: #1f1f23;
-    height: 80vh;
-    overflow-y: auto; /* Enable vertical scrolling */
-    box-sizing: border-box;
-    scroll-behavior: smooth; /* Smooth scrolling effect */
-}
+        #chat-container {
+            max-width: 90vw;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #1f1f23;
+            height: 80vh;
+            overflow-y: auto; /* Enable vertical scrolling */
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
 
-.message {
-    display: flex;
-    justify-content: space-between; /* Ensures space between text and button */
-    align-items: flex-start; /* Align items at the top */
-    margin-bottom: 15px;
-    padding: 10px 15px;
-    background-color: #282828;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    gap: 10px; /* Space between elements */
-}
+        .message {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: #282828;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            gap: 10px;
+        }
 
-.message:hover {
-    background-color: #333;
-}
+        .message:hover {
+            background-color: #333;
+        }
 
-.message-content {
-    display: flex;
-    flex-direction: row; /* Ensure name and message are on the same row */
-    align-items: center; /* Vertically center name and text */
-    flex-grow: 1; /* Allow this section to take up available space */
-    max-width: calc(100% - 120px); /* Prevent text from overlapping the button */
-    gap: 5px; /* Add spacing between username and message */
-    flex-wrap: wrap; /* Allow wrapping if the content overflows */
-    margin-right: 10px; /* Add spacing before the button */
-}
+        .message-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-grow: 1;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-right: 10px;
+        }
 
+        .badge {
+            margin-right: 6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            object-fit: cover;
+        }
 
-.badge {
-    margin-right: 6px;
-    width: 18px;
-    height: 18px;
-    border-radius: 3px;
-    object-fit: cover; /* Ensure badges maintain aspect ratio */
-}
+        .username {
+            font-weight: bold;
+            color: #7fffd4;
+            margin-right: 8px;
+            font-size: 15px;
+        }
 
-.username {
-    font-weight: bold;
-    color: #7fffd4;
-    margin-right: 8px;
-    font-size: 15px;
-}
+        .message-text {
+            color: white;
+            font-size: 14px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            margin-left: 5px;
+            flex-grow: 1;
+        }
 
-.message-text {
-    color: white;
-    font-size: 14px;
-    word-wrap: break-word;
-    line-height: 1.5;
-    margin-left: 5px;
-    margin-right: 10px;
-    flex-grow: 1; /* Take up remaining space */
-    max-width: calc(100% - 100px); /* Ensure it doesn't overlap the button */
-}
+        .highlight-button {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
+            align-self: center;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
 
-.highlight-button {
-    background-color: #1e90ff;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    flex-shrink: 0; /* Prevent button from shrinking */
-    align-self: center; /* Keep button vertically aligned */
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
+        .highlight-button:hover {
+            background-color: #1c86ee;
+            transform: scale(1.05);
+        }
 
-.highlight-button:hover {
-    background-color: #1c86ee;
-    transform: scale(1.05); /* Slight zoom on hover */
-}
-
-.highlighted {
-    background-color: #ffd700 !important; /* Gold background for highlighted messages */
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6); /* Glow effect for highlight */
-}
-
-
+        .highlighted {
+            background-color: #ffd700 !important;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        }
     </style>
 </head>
 <body>
@@ -124,12 +118,9 @@ h1 {
 
         async function fetchChat() {
             try {
-                const response = await fetch("chat.txt");
-                const data = await response.text();
-    
-                // Split lines and parse JSON
-                const messages = data.trim().split("\n").map(line => JSON.parse(line));
-    
+                const response = await fetch("/api/chat");
+                const messages = await response.json(); // Fetch messages from the server
+
                 const chatContainer = document.getElementById("chat-container");
                 const currentMessageCount = messages.length;
 
@@ -142,11 +133,11 @@ h1 {
                     messages.forEach(msg => {
                         const messageDiv = document.createElement("div");
                         messageDiv.classList.add("message");
-        
+
                         // Content container for badges and message text
                         const messageContentDiv = document.createElement("div");
                         messageContentDiv.classList.add("message-content");
-        
+
                         // Add badges
                         if (msg.badges && msg.badges.length > 0) {
                             msg.badges.forEach(badgeUrl => {
@@ -157,18 +148,18 @@ h1 {
                                 messageContentDiv.appendChild(badgeImg);
                             });
                         }
-        
+
                         // Add username
                         const usernameSpan = document.createElement("span");
                         usernameSpan.classList.add("username");
                         usernameSpan.textContent = msg.author;
                         messageContentDiv.appendChild(usernameSpan);
-        
+
                         // Add message content
                         const messageContent = document.createElement("span");
                         messageContent.classList.add("message-text");
                         messageContent.textContent = msg.content;
-        
+
                         messageContentDiv.appendChild(messageContent);
                         messageDiv.appendChild(messageContentDiv);
 
@@ -178,7 +169,7 @@ h1 {
                         highlightButton.classList.add("highlight-button");
                         highlightButton.onclick = () => toggleHighlight(msg);
                         messageDiv.appendChild(highlightButton);
-        
+
                         chatContainer.appendChild(messageDiv);
                     });
 
@@ -205,9 +196,10 @@ h1 {
                 alert("Failed to highlight message.");
             }
         }
-    
-        // Poll the chat file every second
+
+        // Poll the chat API every 500ms
         setInterval(fetchChat, 500);
     </script>
 </body>
 </html>
+
