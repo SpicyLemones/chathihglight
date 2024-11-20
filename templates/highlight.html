@@ -70,86 +70,89 @@
 
     <audio id="slide-sound" src="/static/slide.mp3" preload="auto"></audio>
 
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <script>
-        let lastHighlight = null; // Track the last highlighted message
+        const socket = io(); // Connect to the WebSocket server
+        const body = document.body;
+        const highlightDiv = document.getElementById("highlight");
+        const slideSound = document.getElementById("slide-sound");
+        let animationTimeout;
 
-        async function fetchHighlightedMessage() {
-            const response = await fetch("/api/highlight");
-            const message = await response.json();
+        // Display a new highlighted message
+        function displayHighlight(message) {
+            // Clear any existing animation or timeout
+            clearTimeout(animationTimeout);
+            highlightDiv.classList.remove("show");
 
-            const body = document.body;
-            const highlightDiv = document.getElementById("highlight");
+            // Clear current content
+            highlightDiv.innerHTML = "";
 
-            // If there is a valid new message with content
-            if (
-                message &&
-                message.content &&
-                JSON.stringify(message) !== JSON.stringify(lastHighlight)
-            ) {
-                lastHighlight = message; // Update the last highlight
-
-                // Clear current content
-                highlightDiv.innerHTML = "";
-
-                // Add badges
-                const usernameSpan = document.createElement("span");
-                usernameSpan.classList.add("username");
-                if (message.badges && message.badges.length > 0) {
-                    message.badges.forEach((badgeUrl) => {
-                        const badgeImg = document.createElement("img");
-                        badgeImg.src = badgeUrl;
-                        badgeImg.alt = "Badge";
-                        badgeImg.classList.add("badge");
-                        usernameSpan.appendChild(badgeImg);
-                    });
-                }
-
-                // Add username
-                const usernameText = document.createElement("span");
-                usernameText.textContent = `${message.author}: `;
-                usernameText.style.color = message.color;
-                usernameSpan.appendChild(usernameText);
-
-                // Add content
-                const contentSpan = document.createElement("span");
-                contentSpan.textContent = message.content;
-
-                // Append all elements to the highlight div
-                highlightDiv.appendChild(usernameSpan);
-                highlightDiv.appendChild(contentSpan);
-
-                // Play sound
-                const slideSound = document.getElementById("slide-sound");
-                slideSound.volume = 0.5;
-                slideSound.play().catch((error) =>
-                    console.error("Audio playback failed:", error)
-                );
-
-                // Make the body visible and fade it in
-                body.style.visibility = "visible";
-                requestAnimationFrame(() => {
-                    body.style.opacity = "1"; // Fade in
+            // Add badges
+            const usernameSpan = document.createElement("span");
+            usernameSpan.classList.add("username");
+            if (message.badges && message.badges.length > 0) {
+                message.badges.forEach((badgeUrl) => {
+                    const badgeImg = document.createElement("img");
+                    badgeImg.src = badgeUrl;
+                    badgeImg.alt = "Badge";
+                    badgeImg.classList.add("badge");
+                    usernameSpan.appendChild(badgeImg);
                 });
-
-                // Start the animation
-                highlightDiv.classList.add("show");
-
-                // Schedule the fade-out and hiding of the body
-                setTimeout(() => {
-                    // Start fading out the body just before the animation ends
-                    body.style.opacity = "0";
-
-                    // Hide the body completely after the fade-out
-                    setTimeout(() => {
-                        body.style.visibility = "hidden"; // Fully hide the body
-                        highlightDiv.classList.remove("show"); // Reset animation state
-                    }, 400); // Match the fade-out transition duration
-                }, 14600); // Start fading out slightly before the animation ends (15s total)
             }
+
+            // Add username
+            const usernameText = document.createElement("span");
+            usernameText.textContent = `${message.author}: `;
+            usernameText.style.color = message.color;
+            usernameSpan.appendChild(usernameText);
+
+            // Add content
+            const contentSpan = document.createElement("span");
+            contentSpan.textContent = message.content;
+
+            // Append all elements to the highlight div
+            highlightDiv.appendChild(usernameSpan);
+            highlightDiv.appendChild(contentSpan);
+
+            // Play sound
+            slideSound.volume = 0.5;
+            slideSound.play().catch((error) =>
+                console.error("Audio playback failed:", error)
+            );
+
+            // Make the body visible and fade it in
+            body.style.visibility = "visible";
+            requestAnimationFrame(() => {
+                body.style.opacity = "1"; // Fade in
+            });
+
+            // Start the animation
+            highlightDiv.classList.add("show");
+
+            // Schedule the fade-out and hiding of the body
+            animationTimeout = setTimeout(() => {
+                body.style.opacity = "0"; // Start fading out
+                setTimeout(() => {
+                    body.style.visibility = "hidden"; // Fully hide the body
+                    highlightDiv.classList.remove("show"); // Reset animation state
+                }, 400); // Match the fade-out transition duration
+            }, 14600); // Start fading out slightly before the animation ends (15s total)
         }
 
-        // Poll the server every 1 second for new highlighted messages
-        setInterval(fetchHighlightedMessage, 1000);
+        // Handle new highlight messages
+        socket.on("new_highlight", (message) => {
+            displayHighlight(message);
+        });
+
+        // Handle reset highlight messages
+        socket.on("reset_highlight", () => {
+            clearTimeout(animationTimeout);
+            body.style.visibility = "hidden";
+            body.style.opacity = "0";
+            highlightDiv.classList.remove("show");
+            highlightDiv.innerHTML = ""; // Clear highlight content
+        });
     </script>
 </body>
 </html>
+
