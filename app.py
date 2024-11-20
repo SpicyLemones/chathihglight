@@ -1,9 +1,8 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
-from flask_socketio import SocketIO, emit
 import threading
+import time
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 
 # In-memory storage for chat messages and highlighted message
 chat_messages = []
@@ -13,12 +12,12 @@ highlight_reset_timer = None  # Timer for resetting the highlighted message
 
 def reset_highlight():
     """
-    Reset the highlighted message and notify all connected clients.
+    Reset the highlighted message after a timeout.
     """
     global highlighted_message, highlight_reset_timer
-    highlighted_message = None
-    highlight_reset_timer = None
-    socketio.emit("reset_highlight")
+    time.sleep(15)  # Wait for 20 seconds
+    highlighted_message = None  # Reset the highlighted message
+    highlight_reset_timer = None  # Clear the timer
 
 
 @app.route("/")
@@ -28,7 +27,12 @@ def index():
 
 @app.route("/highlight")
 def highlight():
-    return render_template("highlight.html")
+    # Check if there is a highlighted message with content
+    if highlighted_message and highlighted_message.get("content"):
+        return render_template("highlight.html", message=highlighted_message)
+    else:
+        # Redirect to the main page if no message is highlighted
+        return render_template("highlight.html", message="")
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -46,19 +50,14 @@ def get_chat():
 @app.route("/api/highlight", methods=["POST"])
 def set_highlight():
     global highlighted_message, highlight_reset_timer
+    highlighted_message = request.json
 
     # Cancel the previous reset timer if it exists
     if highlight_reset_timer:
         highlight_reset_timer.cancel()
 
-    # Update the highlighted message
-    highlighted_message = request.json
-
-    # Broadcast the new highlight to all clients
-    socketio.emit("new_highlight", highlighted_message)
-
-    # Start a new timer to reset the highlight after 15 seconds
-    highlight_reset_timer = threading.Timer(15.0, reset_highlight)
+    # Start a new timer to reset the highlight after 20 seconds
+    highlight_reset_timer = threading.Timer(20.0, lambda: reset_highlight())
     highlight_reset_timer.start()
 
     return jsonify({"status": "highlighted"}), 200
@@ -72,4 +71,5 @@ def get_highlight():
 if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 5000))
-    socketio.run(app, host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)
+
