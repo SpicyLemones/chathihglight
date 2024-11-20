@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 import threading
-import time
 
 app = Flask(__name__)
 
@@ -12,12 +11,11 @@ highlight_reset_timer = None  # Timer for resetting the highlighted message
 
 def reset_highlight():
     """
-    Reset the highlighted message after a timeout.
+    Reset the highlighted message.
     """
     global highlighted_message, highlight_reset_timer
-    time.sleep(15)  # Wait for 20 seconds
-    highlighted_message = None  # Reset the highlighted message
-    highlight_reset_timer = None  # Clear the timer
+    highlighted_message = None
+    highlight_reset_timer = None
 
 
 @app.route("/")
@@ -27,12 +25,7 @@ def index():
 
 @app.route("/highlight")
 def highlight():
-    # Check if there is a highlighted message with content
-    if highlighted_message and highlighted_message.get("content"):
-        return render_template("highlight.html", message=highlighted_message)
-    else:
-        # Redirect to the main page if no message is highlighted
-        return render_template("highlight.html", message="")
+    return render_template("highlight.html")
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -50,14 +43,16 @@ def get_chat():
 @app.route("/api/highlight", methods=["POST"])
 def set_highlight():
     global highlighted_message, highlight_reset_timer
-    highlighted_message = request.json
 
     # Cancel the previous reset timer if it exists
     if highlight_reset_timer:
         highlight_reset_timer.cancel()
 
-    # Start a new timer to reset the highlight after 20 seconds
-    highlight_reset_timer = threading.Timer(20.0, lambda: reset_highlight())
+    # Update the highlighted message
+    highlighted_message = request.json
+
+    # Start a new timer to reset the highlight after 15 seconds
+    highlight_reset_timer = threading.Timer(15.0, reset_highlight)
     highlight_reset_timer.start()
 
     return jsonify({"status": "highlighted"}), 200
@@ -65,11 +60,10 @@ def set_highlight():
 
 @app.route("/api/highlight", methods=["GET"])
 def get_highlight():
-    return jsonify(highlighted_message or {"author": "", "content": "No message highlighted yet."})
+    return jsonify(highlighted_message or {"author": "", "content": ""})
 
 
 if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
