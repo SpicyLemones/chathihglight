@@ -31,6 +31,8 @@
             border-radius: 15px; /* Rounded edges */
             animation: none; /* No animation by default */
             text-align: center;
+            position: relative;
+            z-index: 1; /* Keep highlight below combo and video overlays */
         }
         @keyframes slideInOut {
             0% {
@@ -51,7 +53,7 @@
             }
         }
         .highlight.show {
-            animation: slideInOut 14.6s ease-in-out forwards; /* Slightly less than 15s to align with body fade-out */
+            animation: slideInOut 14.6s ease-in-out forwards; /* Slightly less than 15s total */
         }
         .username {
             color: #1e90ff;
@@ -63,16 +65,109 @@
             width: 5vh; /* Adjust dynamically with viewport height */
             height: 5vh; /* Adjust dynamically with viewport height */
         }
+
+        /* Combo Styles */
+        #combo-container {
+            position: fixed;
+            top: 10%;
+            right: 10%;
+            font-size: 8vw;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 2px 2px #000000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 999; /* Above highlight */
+        }
+        #combo-container.show {
+            opacity: 1;
+        }
+        @keyframes comboShake {
+            0% { transform: scale(1) translate(0,0); }
+            20% { transform: scale(1.1) translate(-5px, 0); }
+            40% { transform: scale(1.1) translate(5px, 0); }
+            60% { transform: scale(1.1) translate(-5px, 0); }
+            80% { transform: scale(1.1) translate(5px, 0); }
+            100% { transform: scale(1) translate(0,0); }
+        }
+        .combo-animate {
+            animation: comboShake 0.5s ease;
+        }
+
+        /* Felted Video */
+        #felted-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 50vw;
+            height: auto;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 9999; /* Above everything else */
+            background: #000;
+        }
     </style>
 </head>
 <body>
     <div class="highlight" id="highlight"></div>
-
+    <div id="combo-container"></div>
+    <video id="felted-video" src="/static/felted.mp4" preload="auto"></video>
     <audio id="slide-sound" src="/static/slide.mp3" preload="auto"></audio>
 
     <script>
         let lastHighlight = null; // Track the last highlighted message
         let animationTimeout;
+        let comboCount = 0;       // Combo counter
+        let comboTimeout;         // Timer to hide combo if inactive
+        const comboVisibleDuration = 3000; // Hide combo if no triggers in 3s
+        const comboContainer = document.getElementById("combo-container");
+        const feltedVideo = document.getElementById("felted-video");
+
+        // Check for trigger words in highlight content
+        function checkForComboTrigger(content) {
+            const lowerContent = content.toLowerCase();
+            // Trigger if "emilios" AND ("felt" or "felted") are present
+            if (lowerContent.includes("emilios") && 
+                (lowerContent.includes("felted") || lowerContent.includes("felt"))) {
+                incrementCombo();
+            }
+        }
+
+        function incrementCombo() {
+            comboCount++;
+            showCombo();
+            if (comboCount === 100) {
+                playFeltedVideo();
+            }
+        }
+
+        function showCombo() {
+            comboContainer.textContent = comboCount + "x!";
+            comboContainer.classList.add("show", "combo-animate");
+
+            // Remove combo-animate after animation ends
+            setTimeout(() => {
+                comboContainer.classList.remove("combo-animate");
+            }, 500);
+
+            // Reset timer
+            clearTimeout(comboTimeout);
+            comboTimeout = setTimeout(hideCombo, comboVisibleDuration);
+        }
+
+        function hideCombo() {
+            comboContainer.classList.remove("show");
+            comboCount = 0; // Reset the combo after hiding
+        }
+
+        function playFeltedVideo() {
+            feltedVideo.style.display = "block";
+            feltedVideo.play();
+            feltedVideo.onended = () => {
+                feltedVideo.style.display = "none";
+            };
+        }
 
         async function fetchHighlightedMessage() {
             try {
@@ -123,6 +218,9 @@
                     // Append all elements to the highlight div
                     highlightDiv.appendChild(usernameSpan);
                     highlightDiv.appendChild(contentSpan);
+
+                    // Check for combo trigger in highlight message
+                    checkForComboTrigger(message.content);
 
                     // Play sound
                     const slideSound = document.getElementById("slide-sound");
