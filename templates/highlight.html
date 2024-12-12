@@ -18,14 +18,13 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            /* Removed visibility and opacity transitions on body */
         }
 
         .highlight {
             font-size: 5vw;
             font-weight: bold;
             padding: 2vh;
-            border: 5px solid #000000;
+            border: 5px solid #000;
             background-color: rgba(51, 51, 51);
             border-radius: 15px;
             animation: none;
@@ -38,7 +37,6 @@
         }
 
         .highlight.show {
-            /* Instead of using animation keyframes, use transitions directly */
             opacity: 1;
             transform: translateY(0);
         }
@@ -55,13 +53,11 @@
             height: 5vh;
         }
 
-        /* Combo Styles */
         #combo-container {
             position: fixed;
             top: 10%;
             right: 10%;
-            font-size: 8vw;
-            font-weight: bold;
+            /* Instead of a fixed size, we'll update this dynamically in JS */
             color: #ff0000;
             text-shadow: 2px 2px #000000;
             opacity: 0;
@@ -87,7 +83,6 @@
             animation: comboShake 0.5s ease;
         }
 
-        /* Felted Video */
         #felted-video {
             position: fixed;
             top: 50%;
@@ -130,6 +125,12 @@
 
         function showCombo() {
             comboContainer.textContent = "Emilios Felting " + comboCount + "x!";
+
+            // Increase font size gradually with each combo increment
+            // Base is 8vw, add 0.2vw per combo increment
+            const newFontSize = 8 + (comboCount * 0.2);
+            comboContainer.style.fontSize = newFontSize + "vw";
+
             comboContainer.classList.add("show", "combo-animate");
             setTimeout(() => {
                 comboContainer.classList.remove("combo-animate");
@@ -141,7 +142,9 @@
 
         function hideCombo() {
             comboContainer.classList.remove("show");
-            comboCount = 0;
+            comboCount = 0; // Reset combo after hiding
+            // Optionally reset font size here if you want to go back to original size when hidden
+            // Otherwise, it just keeps growing from wherever it left off next time
         }
 
         function playFeltedVideo() {
@@ -171,10 +174,8 @@
                     JSON.stringify(message) !== JSON.stringify(lastHighlight)
                 ) {
                     lastHighlight = message;
-                    // Clear any existing timeout
                     clearTimeout(highlightTimeout);
-                    
-                    // Set highlight content
+                    highlightDiv.classList.remove("show");
                     highlightDiv.innerHTML = "";
 
                     const usernameSpan = document.createElement("span");
@@ -200,17 +201,14 @@
                     highlightDiv.appendChild(usernameSpan);
                     highlightDiv.appendChild(contentSpan);
 
-                    // Play sound
                     const slideSound = document.getElementById("slide-sound");
                     slideSound.volume = 0.1;
                     slideSound.play().catch((error) =>
                         console.error("Audio playback failed:", error)
                     );
 
-                    // Show highlight
                     highlightDiv.classList.add("show");
 
-                    // Schedule hide after animation duration
                     highlightTimeout = setTimeout(() => {
                         highlightDiv.classList.remove("show");
                     }, 14600);
@@ -241,8 +239,8 @@
         }
 
         // Poll highlight and chat
-        setInterval(fetchHighlightedMessage, 100);
-        setInterval(fetchChatMessages, 100);
+        setInterval(fetchHighlightedMessage, 500);
+        setInterval(fetchChatMessages, 500);
     </script>
 </body>
 </html>
