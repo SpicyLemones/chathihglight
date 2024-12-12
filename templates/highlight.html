@@ -108,7 +108,7 @@
 
         let comboCount = 0;       
         let comboTimeout;         
-        const comboVisibleDuration = 30000;
+        const comboVisibleDuration = 15000;
         const comboContainer = document.getElementById("combo-container");
         const feltedVideo = document.getElementById("felted-video");
         const highlightDiv = document.getElementById("highlight");
@@ -128,7 +128,7 @@
 
             // Increase font size gradually with each combo increment
             // Base is 8vw, add 0.2vw per combo increment
-            const newFontSize = 5 + (comboCount * 0.4);
+            const newFontSize = 5 + (comboCount * 0.1);
             comboContainer.style.fontSize = newFontSize + "vw";
 
             comboContainer.classList.add("show", "combo-animate");
